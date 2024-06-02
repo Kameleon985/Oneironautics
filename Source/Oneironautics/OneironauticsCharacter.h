@@ -51,13 +51,19 @@ class AOneironauticsCharacter : public ACharacter, public IAbilitySystemInterfac
 	UInputAction* MoveAction;
 	
 public:
-	AOneironauticsCharacter();
+	AOneironauticsCharacter(const FObjectInitializer& ObjectInitializer);
 
 	virtual void PostInitializeComponents() override;
 
 	bool ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect, FGameplayEffectContextHandle InEffectHandle);
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+	void OnJumpActionStarted();
+
+	//virtual void StopJumping() override;
+
+	virtual void Landed(const FHitResult& Hit) override;
 
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -124,5 +130,11 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UCharacterDataAsset* CharacterDataAsset;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag JumpEventTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer InAirTag;
 };
 

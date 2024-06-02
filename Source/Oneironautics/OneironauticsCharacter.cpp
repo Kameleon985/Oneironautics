@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystemComponent.h"
+#include "Components/ONT_CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/AttributeSets/ONT_AttributeSetBase.h"
 #include "AbilitySystem/Components/ONT_AbilitySystemComponentBase.h"
@@ -21,13 +22,14 @@ DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 //////////////////////////////////////////////////////////////////////////
 // AOneironauticsCharacter
 
-AOneironauticsCharacter::AOneironauticsCharacter()
+AOneironauticsCharacter::AOneironauticsCharacter(const FObjectInitializer& ObjectInitializer) 
+	: Super(ObjectInitializer.SetDefaultSubobjectClass<UONT_CharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
 	// Character doesnt have a rifle at start
 	bHasRifle = false;
 	
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 		
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
@@ -88,6 +90,26 @@ UAbilitySystemComponent* AOneironauticsCharacter::GetAbilitySystemComponent() co
 	return AbilitySystemComponent;
 }
 
+void AOneironauticsCharacter::OnJumpActionStarted()
+{
+	FGameplayEventData Payload;
+
+	Payload.Instigator = this;
+	Payload.EventTag = JumpEventTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, JumpEventTag, Payload);
+}
+
+void AOneironauticsCharacter::Landed(const FHitResult& Hit)
+{
+	Super::Landed(Hit);
+
+	if (AbilitySystemComponent)
+	{
+		AbilitySystemComponent->RemoveActiveEffectsWithTags(InAirTag);
+	}
+}
+
 void AOneironauticsCharacter::GiveAbilities()
 {
 	if (HasAuthority() && AbilitySystemComponent)
@@ -137,8 +159,8 @@ void AOneironauticsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AOneironauticsCharacter::OnJumpActionStarted);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &AOneironauticsCharacter::StopJumping);
 
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOneironauticsCharacter::Move);

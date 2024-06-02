@@ -24,9 +24,22 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(UONT_AttributeSetBase, Health)
+
 	UPROPERTY(BlueprintReadOnly, Category = "MaxHealth", ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
 	ATTRIBUTE_ACCESSORS(UONT_AttributeSetBase, MaxHealth)
+
+	UPROPERTY(BlueprintReadOnly, Category = "Stamina", ReplicatedUsing = OnRep_Stamina)
+	FGameplayAttributeData Stamina;
+	ATTRIBUTE_ACCESSORS(UONT_AttributeSetBase, Stamina)
+
+	UPROPERTY(BlueprintReadOnly, Category = "MaxStamina", ReplicatedUsing = OnRep_MaxStamina)
+	FGameplayAttributeData MaxStamina;
+	ATTRIBUTE_ACCESSORS(UONT_AttributeSetBase, MaxStamina)
+
+	UPROPERTY(BlueprintReadOnly, Category = "MaxMovemenentSpeed", ReplicatedUsing = OnRep_MaxMovemenentSpeed)
+	FGameplayAttributeData MaxMovemenentSpeed;
+	ATTRIBUTE_ACCESSORS(UONT_AttributeSetBase, MaxMovemenentSpeed)
 
 protected:
 
@@ -37,6 +50,15 @@ protected:
 
 	UFUNCTION()
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
+
+	UFUNCTION()
+	virtual void OnRep_Stamina(const FGameplayAttributeData& OldStamina);
+
+	UFUNCTION()
+	virtual void OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina);
+
+	UFUNCTION()
+	virtual void OnRep_MaxMovemenentSpeed(const FGameplayAttributeData& OldMaxMovemenentSpeed);
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
