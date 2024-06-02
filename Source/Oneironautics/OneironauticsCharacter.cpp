@@ -8,7 +8,12 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystem/AttributeSets/ONT_AttributeSetBase.h"
+#include "AbilitySystem/Components/ONT_AbilitySystemComponentBase.h"
 #include "InputActionValue.h"
+#include "Net/UnrealNetwork.h"
 #include "Engine/LocalPlayer.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -39,6 +44,11 @@ AOneironauticsCharacter::AOneironauticsCharacter()
 	//Mesh1P->SetRelativeRotation(FRotator(0.9f, -19.19f, 5.2f));
 	Mesh1P->SetRelativeLocation(FVector(-30.f, 0.f, -150.f));
 
+	AbilitySystemComponent = CreateDefaultSubobject<UONT_AbilitySystemComponentBase>(TEXT("AbilitySystemComponent"));
+	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
+
+	AttributeSet = CreateDefaultSubobject<UONT_AttributeSetBase>(TEXT("AttributeSet"));
 }
 
 void AOneironauticsCharacter::BeginPlay()
@@ -55,6 +65,68 @@ void AOneironauticsCharacter::BeginPlay()
 		}
 	}
 
+}
+
+bool AOneironauticsCharacter::ApplyGameplayEffectToSelf(TSubclassOf<UGameplayEffect> Effect, FGameplayEffectContextHandle InEffectHandle)
+{
+	if (!Effect.Get())
+	{
+		return false;
+	}
+	FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(Effect, 1, InEffectHandle);
+	if (SpecHandle.IsValid())
+	{
+		FActiveGameplayEffectHandle ActiveGEHandle = AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+
+		return ActiveGEHandle.WasSuccessfullyApplied();
+	}
+	return false;
+}
+
+UAbilitySystemComponent* AOneironauticsCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AOneironauticsCharacter::GiveAbilities()
+{
+	if (HasAuthority() && AbilitySystemComponent)
+	{
+		for (auto DefaultAblity : CharacterData.Abilities)
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(DefaultAblity));
+		}
+	}
+}
+
+void AOneironauticsCharacter::ApplyStartupEffects()
+{
+	if (HasAuthority())
+	{
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
+		for (auto ChracterEffect : CharacterData.Effects)
+		{
+			ApplyGameplayEffectToSelf(ChracterEffect, EffectContext);
+		}
+	}
+}
+
+void AOneironauticsCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+
+	GiveAbilities();
+	ApplyStartupEffects();
+}
+
+void AOneironauticsCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -115,4 +187,43 @@ void AOneironauticsCharacter::SetHasRifle(bool bNewHasRifle)
 bool AOneironauticsCharacter::GetHasRifle()
 {
 	return bHasRifle;
+}
+
+void AOneironauticsCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	if (IsValid(CharacterDataAsset))
+	{
+		SetCharacterData(CharacterDataAsset->CharacterData);
+	}
+}
+
+FCharacterData AOneironauticsCharacter::GetCharacterData() const
+{
+	return CharacterData;
+}
+
+void AOneironauticsCharacter::SetCharacterData(const FCharacterData& InCharacterData)
+{
+	CharacterData = InCharacterData;
+
+	InitFromCharacterData(CharacterData);
+}
+
+void AOneironauticsCharacter::OnRep_CharacterData()
+{
+	InitFromCharacterData(CharacterData, false);
+}
+
+void AOneironauticsCharacter::InitFromCharacterData(const FCharacterData& InCharacterData, bool bFromReplication)
+{
+
+}
+
+void AOneironauticsCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AOneironauticsCharacter, CharacterData);
 }

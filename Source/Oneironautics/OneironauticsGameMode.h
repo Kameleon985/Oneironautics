@@ -13,6 +13,7 @@ class AOneironauticsGameMode : public AGameModeBase
 
 public:
 	AOneironauticsGameMode();
+
 };
 
 
