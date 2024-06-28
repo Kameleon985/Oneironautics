@@ -30,25 +30,26 @@ class AOneironauticsCharacter : public ACharacter, public IAbilitySystemInterfac
 {
 	GENERATED_BODY()
 
-	/** Pawn mesh: 1st person view (arms; seen only by self) */
 	UPROPERTY(VisibleDefaultsOnly, Category=Mesh)
 	USkeletalMeshComponent* Mesh1P;
 
-	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-	/** MappingContext */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputMappingContext* DefaultMappingContext;
 
-	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* JumpAction;
 
-	/** Move Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* CrouchAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* SprintAction;
 	
 public:
 	AOneironauticsCharacter(const FObjectInitializer& ObjectInitializer);
@@ -61,29 +62,30 @@ public:
 
 	void OnJumpActionStarted();
 
-	//virtual void StopJumping() override;
+	void OnCrouchActionStarted();
+	void OnCrouchActionEnded();
+
+	void OnSprintActionStarted();
+	void OnSprintActionEnded();
 
 	virtual void Landed(const FHitResult& Hit) override;
 
-	/** Look Input Action */
+	virtual void OnStartCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+	virtual void OnEndCrouch(float HalfHeightAdjust, float ScaledHalfHeightAdjust) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
 
-	/** Bool for AnimBP to switch to another animation set */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
 	bool bHasRifle;
 
-	/** Setter to set the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	void SetHasRifle(bool bNewHasRifle);
 
-	/** Getter for the bool */
 	UFUNCTION(BlueprintCallable, Category = Weapon)
 	bool GetHasRifle();
 
-	/** Returns Mesh1P subobject **/
 	USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
-	/** Returns FirstPersonCameraComponent subobject **/
 	UCameraComponent* GetFirstPersonCameraComponent() const { return FirstPersonCameraComponent; }
 
 	UFUNCTION(BlueprintCallable)
@@ -91,6 +93,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SetCharacterData(const FCharacterData& InCharacterData);
+
+	void OnMaxMovementSpeedChanged(const FOnAttributeChangeData& Data);
 
 protected:
 
@@ -108,15 +112,14 @@ protected:
 	UPROPERTY(Transient)
 	UONT_AttributeSetBase* AttributeSet;
 
-	/** Called for movement input */
+	UPROPERTY()
+	UONT_CharacterMovementComponent* ONTCharacterMovementComponent;
+
 	void Move(const FInputActionValue& Value);
 
-	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
-	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
-	// End of APawn interface
 
 	UPROPERTY(ReplicatedUsing = OnRep_CharacterData)
 	FCharacterData CharacterData;
@@ -136,5 +139,16 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTagContainer InAirTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer CrouchTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTagContainer SprintTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> CrouchStateEffect;
+	
+	FDelegateHandle MaxMovementSpeedChangeDelegateHandle;
 };
 

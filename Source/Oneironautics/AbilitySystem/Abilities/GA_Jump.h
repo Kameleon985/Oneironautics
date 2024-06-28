@@ -3,14 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Abilities/GameplayAbility.h"
+#include "GA_Base.h"
 #include "GA_Jump.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ONEIRONAUTICS_API UGA_Jump : public UGameplayAbility
+class ONEIRONAUTICS_API UGA_Jump : public UGA_Base
 {
 	GENERATED_BODY()
 	
@@ -19,9 +19,5 @@ class ONEIRONAUTICS_API UGA_Jump : public UGameplayAbility
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData);
 
 	virtual bool CanActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayTagContainer* SourceTags, const FGameplayTagContainer* TargetTags, OUT FGameplayTagContainer* OptionalRelevantTags) const;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Effects")
-	TSubclassOf<UGameplayEffect> JumpEffect;
 
 };
