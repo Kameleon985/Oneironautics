@@ -12,11 +12,12 @@
 #include "Components/ONT_CharacterMovementComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/AttributeSets/ONT_AttributeSetBase.h"
+#include "Components/InventoryComponent.h"
 #include "AbilitySystem/Components/ONT_AbilitySystemComponentBase.h"
 #include "InputActionValue.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/LocalPlayer.h"
-#include <AbilitySystemLog.h>
+#include "AbilitySystemLog.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -49,6 +50,9 @@ AOneironauticsCharacter::AOneironauticsCharacter(const FObjectInitializer& Objec
 	AttributeSet = CreateDefaultSubobject<UONT_AttributeSetBase>(TEXT("AttributeSet"));
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetMaxMovemenentSpeedAttribute()).AddUObject(this, &AOneironauticsCharacter::OnMaxMovementSpeedChanged);
+
+	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
+	InventoryComponent->SetIsReplicated(true);
 }
 
 void AOneironauticsCharacter::BeginPlay()
@@ -77,6 +81,11 @@ void AOneironauticsCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AOneironauticsCharacter::OnSprintActionStarted);
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &AOneironauticsCharacter::OnSprintActionEnded);
+		
+		EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &AOneironauticsCharacter::OnEquipItemTriggered);
+		EnhancedInputComponent->BindAction(EquipNextAction, ETriggerEvent::Started, this, &AOneironauticsCharacter::OnEquipNextItemTriggered);
+		EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AOneironauticsCharacter::OnDropItemTriggered);
+
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AOneironauticsCharacter::Move);
 
@@ -150,6 +159,30 @@ void AOneironauticsCharacter::OnSprintActionEnded()
 	{
 		AbilitySystemComponent->CancelAbilities(&SprintTag);
 	}
+}
+
+void AOneironauticsCharacter::OnEquipItemTriggered()
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::EquipItemTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::EquipItemTag, EventPayload);
+}
+
+void AOneironauticsCharacter::OnEquipNextItemTriggered()
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::EquipNextTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::EquipNextTag, EventPayload);
+}
+
+void AOneironauticsCharacter::OnDropItemTriggered()
+{
+	FGameplayEventData EventPayload;
+	EventPayload.EventTag = UInventoryComponent::DropItemTag;
+
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, UInventoryComponent::DropItemTag, EventPayload);
 }
 
 void AOneironauticsCharacter::Landed(const FHitResult& Hit)

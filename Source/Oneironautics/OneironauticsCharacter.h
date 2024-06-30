@@ -18,6 +18,8 @@ class UInputMappingContext;
 
 class UONT_AbilitySystemComponentBase;
 class UONT_AttributeSetBase;
+class UONT_CharacterMovementComponent;
+class UInventoryComponent;
 class UGameplayEffect;
 class UGameplayAbility;
 
@@ -50,6 +52,16 @@ class AOneironauticsCharacter : public ACharacter, public IAbilitySystemInterfac
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	UInputAction* SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EquipAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* EquipNextAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* DropAction;
+
 	
 public:
 	AOneironauticsCharacter(const FObjectInitializer& ObjectInitializer);
@@ -67,6 +79,13 @@ public:
 
 	void OnSprintActionStarted();
 	void OnSprintActionEnded();
+
+	void OnEquipItemTriggered();
+
+	void OnEquipNextItemTriggered();
+
+	void OnDropItemTriggered();
+
 
 	virtual void Landed(const FHitResult& Hit) override;
 
@@ -133,6 +152,9 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UCharacterDataAsset* CharacterDataAsset;
+
+	UPROPERTY(EditAnywhere, Replicated)
+	UInventoryComponent* InventoryComponent = nullptr;
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag JumpEventTag;

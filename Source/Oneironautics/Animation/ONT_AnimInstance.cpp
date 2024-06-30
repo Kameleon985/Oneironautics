@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
+#include "Animation/ONT_AnimInstance.h"
 #include "../OneironauticsCharacter.h"
 #include "../Animation/AnimationDataAsset.h"
-#include "Animation/ONT_AnimInstance.h"
 
 UBlendSpace* UONT_AnimInstance::GetLocomotionBlendspace() const
 {

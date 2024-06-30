@@ -4,11 +4,11 @@
 #include "Components/ONT_CharacterMovementComponent.h"
 #include "AbilitySystemComponent.h"
 
-static TAutoConsoleVariable<int32> CVarShowTraversal(
+static TAutoConsoleVariable<int32> CVarDebugShowTraversal(
 	TEXT("ShowDebugTraversal"),
 	0,
-	TEXT("Draws debug info about traversal"),
-	TEXT(" 0: off/n"),
+	TEXT("Draw debug info about traversal")
+	TEXT(" 0: off/n")
 	TEXT(" 1: on/n"),
 	ECVF_Cheat
 );
